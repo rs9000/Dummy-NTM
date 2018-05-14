@@ -9,7 +9,7 @@ usage: train.py [-args]
 ```
 
 ### Model:<br>
-<img src="http://i67.tinypic.com/ouv7s3.jpg" width="800">
+<img src="http://i67.tinypic.com/ouv7s3.jpg" width="700">
 
 ## Learn functions task: <br>
 - Input Vector Length: 10<br> 
