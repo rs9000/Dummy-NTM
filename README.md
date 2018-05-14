@@ -16,7 +16,7 @@ usage: train.py [-args]
 - Max Program length: 5<br> 
 - N° Functions: 5<br> 
 - Function size: 9x9<br> 
-<img src="http://i66.tinypic.com/dcvcpw.jpg" width="600">
+<img src="http://i68.tinypic.com/vmruwi.jpg" width="600">
 
 ### Function vs Function learned: <br>
 <img src="http://i63.tinypic.com/mcuk3d.jpg" width="600">
