@@ -9,7 +9,7 @@ usage: train.py [-args]
 ```
 
 ### Model:<br>
-<img src="http://i66.tinypic.com/2enqkd4.jpg" width="800">
+<img src="http://i67.tinypic.com/ouv7s3.jpg" width="800">
 
 ## Learn functions task: <br>
 - Input Vector Length: 10<br> 
@@ -22,4 +22,4 @@ usage: train.py [-args]
 <img src="http://i63.tinypic.com/mcuk3d.jpg" width="600">
 
 ### Loss: <br>
-<img src="http://i66.tinypic.com/14lmq8n.jpg" width="600">
+<img src="http://i63.tinypic.com/2vn2ger.jpg" width="600">
