@@ -24,7 +24,7 @@ class NTM(nn.Module):
         self.input_embedding = torch.from_numpy(input_embedding)
         self.output_embedding = torch.from_numpy(output_embedding)
 
-        self.controller = Controller(function_vector_size + max_program_length, controller_dim)
+        self.controller = Controller(max_program_length, controller_dim)
         self.read_head = ReadHead(self.M, self.N, function_vector_size)
         self.write_head = WriteHead(self.M, self.N, controller_dim)
         self.executioner = Executioner()
@@ -37,7 +37,7 @@ class NTM(nn.Module):
 
         for program_i in program[0]:
             # STEP 2 Controller
-            X2 = self.controller(X, torch.unsqueeze(program_i,0))
+            X2 = self.controller(torch.unsqueeze(program_i,0))
             # STEP 3 Write/Read head
             self._read_write(X2, program_i)
             reshap = self.function_vector_size

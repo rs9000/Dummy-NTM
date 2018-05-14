@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+import torch.nn.functional as F
 
 class Controller(nn.Module):
     def __init__(self, num_inputs, num_outputs):
@@ -11,10 +12,9 @@ class Controller(nn.Module):
 
     def reset_parameters(self):
         # Initialize the linear layers
-        nn.init.xavier_uniform_(self.fc1.weight, gain=1.4)
+        nn.init.normal_(self.fc1.weight, std=1)
         nn.init.normal_(self.fc1.bias, std=0.01)
 
-    def forward(self, x, program):
-        x = torch.cat((x, program.cuda()), dim=1)
-        x = self.fc1(x)
+    def forward(self, x):
+        x = F.sigmoid(self.fc1(x.cuda()))
         return x

@@ -34,7 +34,7 @@ class ReadHead(Memory):
 
     def reset_parameters(self):
         # Initialize the linear layers
-        nn.init.normal(self.fc_read1.weight, std=1)
+        nn.init.normal_(self.fc_read1.weight, std=1)
         nn.init.normal_(self.fc_read1.bias, std=0.01)
 
     def read(self, memory, program):
@@ -42,7 +42,7 @@ class ReadHead(Memory):
         w = self.addressing(program)
         self.w_last.append(w)
         read = torch.matmul(w.cuda(), memory)
-        read = F.logsigmoid(self.fc_read1(read))
+        read = F.tanh(self.fc_read1(read))
         return read, w
 
 

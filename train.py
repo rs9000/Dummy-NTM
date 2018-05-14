@@ -123,7 +123,7 @@ if __name__ == "__main__":
     print(model)
 
     criterion = torch.nn.MSELoss()
-    optimizer = torch.optim.RMSprop(model.parameters(), lr=args.learning_rate)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
 
     print("--------- Number of parameters -----------")
     print(model.calculate_num_params())
