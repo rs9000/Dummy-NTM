@@ -18,7 +18,7 @@ usage: train.py [-args]
 - Function size: 9x9<br> 
 <img src="pics/out.jpg" width="600">
 
-### Sequence of learned functions applied to generate this output: <br>
+### Sequence of learned functions applied by the model to generate this output: <br>
 <img src="pics/softw.jpg" width="600">
 
 ### True primitive functions (never seen by model): <br>
