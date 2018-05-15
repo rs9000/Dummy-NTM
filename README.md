@@ -21,6 +21,9 @@ usage: train.py [-args]
 ### Memory snapshot:
 <img src="pics/memory.jpg" width="300">
 
+### Addressing locations:
+<img src="pics/addr.jpg" width="300">
+
 ### Sequence of learned functions applied by the model to generate this output: <br>
 <img src="pics/softw.jpg" width="600">
 
