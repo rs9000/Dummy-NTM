@@ -19,7 +19,7 @@ usage: train.py [-args]
 <img src="pics/out.jpg" width="600">
 
 ### Memory snapshot during this output:
-<img src="pics/memory.jpg" width="600">
+<img src="pics/memory.jpg" width="300">
 
 ### Sequence of learned functions applied by the model to generate this output: <br>
 <img src="pics/softw.jpg" width="600">
