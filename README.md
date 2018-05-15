@@ -18,6 +18,9 @@ usage: train.py [-args]
 - Function size: 9x9<br> 
 <img src="pics/out.jpg" width="600">
 
+### Memory snapshot during this output:
+<img src="pics/memory.jpg" width="600">
+
 ### Sequence of learned functions applied by the model to generate this output: <br>
 <img src="pics/softw.jpg" width="600">
 
