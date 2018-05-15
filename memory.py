@@ -9,27 +9,34 @@ class Memory(nn.Module):
 
         self.N = N
         self.M = M
-        self.w_last = []
         self.reset_memory()
+        self.rw_addressing = []
 
     def get_weights(self):
-        return self.w_last
+        return self.rw_addressing
 
     def reset_memory(self):
-        self.w_last = []
+        self.rw_addressing = []
 
-    def addressing(self, program):
-        w = F.softmax(program)
+    def addressing(self, k, b, memory):
+        wc = self._similarity(k, b, memory)
+        return wc
+
+    def _similarity(self, k, β, memory):
+        # Similarità coseno
+        w = F.cosine_similarity(memory.cuda(), k, -1, 1e-16)
+        w = F.softmax(β * w, dim=-1)
         return w
 
 
 class ReadHead(Memory):
 
-    def __init__(self, M, N, function_vector_size):
+    def __init__(self, M, N, controller_dim, function_vector_size):
         super(ReadHead, self).__init__(M, N)
 
         print("--- Initialize Memory: ReadHead")
-        self.fc_read1 = nn.Linear(self.N, function_vector_size*function_vector_size).cuda()
+        self.fc_read1 = nn.Linear(controller_dim, self.N+1).cuda()
+        self.fc_decode = nn.Linear(self.N, function_vector_size*function_vector_size).cuda()
         self.reset_parameters()
 
     def reset_parameters(self):
@@ -37,12 +44,17 @@ class ReadHead(Memory):
         nn.init.normal_(self.fc_read1.weight, std=1)
         nn.init.normal_(self.fc_read1.bias, std=0.01)
 
-    def read(self, memory, program):
+        nn.init.normal_(self.fc_decode.weight, std=1)
+        nn.init.normal_(self.fc_decode.bias, std=0.01)
 
-        w = self.addressing(program)
-        self.w_last.append(w)
-        read = torch.matmul(w.cuda(), memory)
-        read = F.tanh(self.fc_read1(read))
+    def read(self, controller_out, memory):
+        param = self.fc_read1(controller_out)
+        k, b = torch.split(param, [self.N, 1], dim=1)
+        w = self.addressing(k,b, memory)
+        self.rw_addressing.append(w)
+
+        read = torch.matmul(w, memory)
+        read = F.tanh(self.fc_decode(read))
         return read, w
 
 
@@ -52,7 +64,7 @@ class WriteHead(Memory):
         super(WriteHead, self).__init__(M, N)
 
         print("--- Initialize Memory: WriteHead")
-        self.fc_write1 = nn.Linear(controller_dim,  self.N).cuda()
+        self.fc_write1 = nn.Linear(controller_dim,  self.N + 1 + self.N).cuda()
         self.reset_parameters()
 
     def reset_parameters(self):
@@ -62,15 +74,19 @@ class WriteHead(Memory):
 
     def write(self, memory, w, a):
         a = torch.squeeze(a)
-        add = torch.ger(w.cuda(), a)
+        w = torch.squeeze(w)
+        add = torch.ger(w, a)
         memory_update = memory.cuda() + add
         return memory_update
 
-    def forward(self, x, memory, program):
-        param = self.fc_write1(x)
-        a = F.tanh(param)
+    def forward(self, controller_out, memory):
+        param = self.fc_write1(controller_out)
+        k, b, a = torch.split(param, [self.N, 1, self.N], dim=1)
+        k = F.tanh(k)
+        b = F.softplus(b)
+        a = F.tanh(a)
+        w = self.addressing(k, b, memory)
+        self.rw_addressing.append(w)
 
-        w = self.addressing(program)
-        self.w_last.append(w)
         mem = self.write(memory, w, a)
         return mem, w

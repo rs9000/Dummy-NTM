@@ -25,7 +25,7 @@ class NTM(nn.Module):
         self.output_embedding = torch.from_numpy(output_embedding)
 
         self.controller = Controller(max_program_length, controller_dim)
-        self.read_head = ReadHead(self.M, self.N, function_vector_size)
+        self.read_head = ReadHead(self.M, self.N, controller_dim, function_vector_size)
         self.write_head = WriteHead(self.M, self.N, controller_dim)
         self.executioner = Executioner()
 
@@ -39,7 +39,7 @@ class NTM(nn.Module):
             # STEP 2 Controller
             X2 = self.controller(torch.unsqueeze(program_i,0))
             # STEP 3 Write/Read head
-            self._read_write(X2, program_i)
+            self._read_write(X2)
             reshap = self.function_vector_size
             # STEP 4 Execute functions
             X = self.executioner(X, self.last_read.view(reshap, reshap))
@@ -48,13 +48,13 @@ class NTM(nn.Module):
         out = self._embed_output(X)
         return out
 
-    def _read_write(self, X, program):
+    def _read_write(self, controller_out):
         # WRITE
-        mem, w = self.write_head(X, self.memory, program)
+        mem, w = self.write_head(controller_out, self.memory)
         self.memory = mem
 
         # READ
-        read, w = self.read_head.read(self.memory, program)
+        read, w = self.read_head.read(controller_out, self.memory)
         self.last_read = read
         self.programList.append(read)
 
@@ -65,10 +65,12 @@ class NTM(nn.Module):
         self.last_read = F.tanh(torch.randn(1, self.N))
         self.write_head.reset_memory()
         self.read_head.reset_memory()
+        self.programList = []
 
     def get_memory_info(self):
         #Get info for Tensorboard
-        return self.memory, self.read_head.get_weights(), self.last_read, self.programList
+
+        return self.memory, self.read_head.get_weights(), self.write_head.get_weights(), self.programList
 
     def calculate_num_params(self):
         """Returns the total number of parameters."""
