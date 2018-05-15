@@ -11,7 +11,7 @@ usage: train.py [-args]
 ### Model:<br>
 <img src="pics/dntm.jpg" width="700">
 
-## Learn functions task: <br>
+## Learn functions task <br>
 - Input Vector Length: 10<br> 
 - Max Program length: 5<br> 
 - N° Functions: 5<br> 
