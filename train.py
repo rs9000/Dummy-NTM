@@ -45,7 +45,7 @@ def parse_arguments():
                         help='Maximum value of gradient clipping', metavar='')
     parser.add_argument('--logdir', type=str, default='./logs2',
                         help='The directory where to store logs', metavar='')
-    parser.add_argument('--loadmodel', type=str, default='checkpoint\checkpoint.model',
+    parser.add_argument('--loadmodel', type=str, default='',
                         help='The pre-trained model checkpoint', metavar='')
     parser.add_argument('--savemodel', type=str, default='checkpoint.model',
                         help='Name/Path of model checkpoint', metavar='')
@@ -86,7 +86,8 @@ def colorize(value, vmin=None, vmax=None, cmap=None):
     value = cmapper(value, bytes=True)  # (nxmx4)
     return value
 
-#Horrible hard-coded function
+
+# Horrible hard-coded function
 def getPrograms(model):
     w = torch.tensor([[1, 0, 0, 0, 0], [0, 1, 0, 0, 0], [0, 0, 1, 0, 0], [0, 0, 0, 1, 0], [0, 0, 0, 0, 1]], dtype=torch.float)
     x = torch.tensor([-0.1,-0.6,0.7,0.3,0.8,-0.45,0.11,0.6,-0.3,0.2], dtype=torch.float)
@@ -139,13 +140,11 @@ if __name__ == "__main__":
 
     for e, (X, program, Y) in enumerate(dataloader):
         tmp = time()
-        model.initalize_state()
         optimizer.zero_grad()
 
         X = X.view(1, -1)
         Y = Y.view(1, -1)
         program.requires_grad = True
-        X.requires_grad = True
 
         y_pred = model(X.cuda(), program.cuda())
 
@@ -163,18 +162,16 @@ if __name__ == "__main__":
             if e % 5000 == 0:
                 print(y_pred)
                 print(Y)
-                mem_pic, read_pic, write_pic, ntm_programs = model.get_memory_info()
+                mem_pic, read_pic, ntm_programs = model.get_memory_info()
                 gen_programs = dataset.program_list()
                 pic1 = vutils.make_grid(y_pred, normalize=True, scale_each=True)
                 pic2 = vutils.make_grid(Y, normalize=True, scale_each=True)
                 pic3 = vutils.make_grid(mem_pic, normalize=True, scale_each=True)
                 pic4 = vutils.make_grid(read_pic, normalize=True, scale_each=True)
-                pic5 = vutils.make_grid(write_pic, normalize=True, scale_each=True)
                 writer.add_image('NTM output', colorize(pic1.data), e)
                 writer.add_image('True output', colorize(pic2), e)
                 writer.add_image('Memory', pic3, e)
                 writer.add_image('Read addressing', pic4, e)
-                writer.add_image('Write addressing', pic5, e)
 
                 for i, ntm_program in enumerate(ntm_programs):
                     pic6 = vutils.make_grid(ntm_program.view(args.function_size, args.function_size), normalize=True, scale_each=True)

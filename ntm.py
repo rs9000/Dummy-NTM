@@ -2,7 +2,7 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 import numpy as np
-from memory import ReadHead, WriteHead
+from memory import ReadHead
 from executioner import Executioner
 from controller import Controller
 
@@ -17,7 +17,7 @@ class NTM(nn.Module):
         self.M = M
         self.N = N
 
-        self.memory = torch.zeros(self.M, self.N)
+        self.memory = torch.nn.Parameter(torch.zeros(self.M, self.N))
         self.last_read = torch.zeros(1, self.N)
 
         self.function_vector_size = function_vector_size
@@ -26,19 +26,23 @@ class NTM(nn.Module):
 
         self.controller = Controller(max_program_length, controller_dim)
         self.read_head = ReadHead(self.M, self.N, controller_dim, function_vector_size)
-        self.write_head = WriteHead(self.M, self.N, controller_dim)
         self.executioner = Executioner()
 
         self.programList = []
+        self.initalize_state()
 
     def forward(self, X, program):
+
+        self.programList = []
+        self.read_head.reset_memory()
+
         # STEP 1 Embedding input
         X = self._embed_input(X)
 
         for program_i in program[0]:
             # STEP 2 Controller
             X2 = self.controller(torch.unsqueeze(program_i,0))
-            # STEP 3 Write/Read head
+            # STEP 3 Read head
             self._read_write(X2)
             reshap = self.function_vector_size
             # STEP 4 Execute functions
@@ -49,28 +53,22 @@ class NTM(nn.Module):
         return out
 
     def _read_write(self, controller_out):
-        # WRITE
-        mem, w = self.write_head(controller_out, self.memory)
-        self.memory = mem
-
         # READ
         read, w = self.read_head.read(controller_out, self.memory)
         self.last_read = read
         self.programList.append(read)
 
     def initalize_state(self):
-        #Initialize stuff
+        # Initialize stuff
         stdev = 1 / (np.sqrt(self.N + self.M))
-        self.memory = nn.init.uniform_((torch.Tensor(self.M, self.N)), -stdev, stdev)
+        self.memory = nn.Parameter(nn.init.uniform_((torch.Tensor(self.M, self.N).cuda()), -stdev, stdev))
         self.last_read = F.tanh(torch.randn(1, self.N))
-        self.write_head.reset_memory()
         self.read_head.reset_memory()
         self.programList = []
 
     def get_memory_info(self):
-        #Get info for Tensorboard
-
-        return self.memory, self.read_head.get_weights(), self.write_head.get_weights(), self.programList
+        # Get info for Tensorboard
+        return self.memory, self.read_head.get_weights(), self.programList
 
     def calculate_num_params(self):
         """Returns the total number of parameters."""
