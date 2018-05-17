@@ -1,4 +1,4 @@
-# Dummy-NTM
+# Simple-DNTM
 Not a Neural turing machine
 
 ### How to use
