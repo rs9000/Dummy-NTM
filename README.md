@@ -50,7 +50,14 @@ FeedForward Controller <br>
 - Similarity Function[3] = tensor([ 0.9300], device='cuda:0')
 - Similarity Function[4] = tensor([ 0.9739], device='cuda:0')
 
-Rnn_seq2seq Controller <br>
+RNN Controller <br>
+Similarity Function[0] = tensor([ 0.9820], device='cuda:0')
+Similarity Function[1] = tensor([ 0.9802], device='cuda:0')
+Similarity Function[2] = tensor([ 0.9776], device='cuda:0')
+Similarity Function[3] = tensor([ 0.9707], device='cuda:0')
+Similarity Function[4] = tensor([ 0.9797], device='cuda:0')
+
+RNN_seq2seq Controller <br>
 - Similarity Function[0] = tensor([-0.0936], device='cuda:0')
 - Similarity Function[1] = tensor([ 0.1777], device='cuda:0')
 - Similarity Function[2] = tensor([-0.1399], device='cuda:0')
