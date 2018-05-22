@@ -40,22 +40,22 @@ usage: train.py [-args]
 
 ### Similarity between learned functions and true functions
 FeedForward Controller <br>
-- Similarity Function[0] = 0.9816
-- Similarity Function[1] = 0.9695
-- Similarity Function[2] = 0.9227
-- Similarity Function[3] = 0.9300
-- Similarity Function[4] = 0.9739
+ [ **0.98** -0.02  0.05  0.18 -0.14]
+ [-0.02  **0.97**  0.08  0.03 -0.03]
+ [ 0.09  0.09  **0.92**  0.28 -0.06]
+ [ 0.17  0.06  0.3   **0.93**  0.04]
+ [-0.14 -0.03 -0.09  0.1   **0.97**]
 
 RNN Controller <br>
-- Similarity Function[0] = 0.9820
-- Similarity Function[1] = 0.9802
-- Similarity Function[2] = 0.9776
-- Similarity Function[3] = 0.9707
-- Similarity Function[4] = 0.9797
+ [ **0.98** -0.03  0.01  0.16 -0.11]
+ [-0.05  **0.98**  0.05  0.02 -0.03]
+ [ 0.05  0.08  **0.98**  0.24 -0.05]
+ [ 0.21 -0.02  0.26  **0.97**  0.03]
+ [-0.14 -0.04 -0.11  0.09  **0.98**]
 
 RNN_seq2seq Controller <br>
-- Similarity Function[0] = -0.0668
-- Similarity Function[1] = 0.1031
-- Similarity Function[2] = 0.0675
-- Similarity Function[3] = 0.2369
-- Similarity Function[4] = 0.8313
+ [-0.07  0.26 -0.06 -0.05 -0.05]
+ [ 0.02  0.1   0.05  0.08  0.07]
+ [-0.03 -0.11  0.07  0.23  0.19]
+ [ 0.03  0.14  0.12  0.24  0.21]
+ [ **0.93**  0.17  **0.91**  **0.79**  **0.83**]
