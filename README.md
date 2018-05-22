@@ -36,30 +36,26 @@ usage: train.py [-args]
 <img src="pics/primitive.jpg" width="600">
 
 ### Loss: <br>
-FeedForward Controller <br>
-<img src="pics/loss.jpg" width="600">
-
-Rnn Controller <br>
-<img src="pics/dntmv2-loss-rnn.jpg" width="600">
+<img src="pics/loss1.jpg" width="600">
 
 ### Similarity between learned functions and true functions
 FeedForward Controller <br>
-- Similarity Function[0] = tensor([ 0.9816], device='cuda:0')
-- Similarity Function[1] = tensor([ 0.9695], device='cuda:0')
-- Similarity Function[2] = tensor([ 0.9227], device='cuda:0')
-- Similarity Function[3] = tensor([ 0.9300], device='cuda:0')
-- Similarity Function[4] = tensor([ 0.9739], device='cuda:0')
+- Similarity Function[0] = 0.9816
+- Similarity Function[1] = 0.9695
+- Similarity Function[2] = 0.9227
+- Similarity Function[3] = 0.9300
+- Similarity Function[4] = 0.9739
 
 RNN Controller <br>
-- Similarity Function[0] = tensor([ 0.9820], device='cuda:0')
-- Similarity Function[1] = tensor([ 0.9802], device='cuda:0')
-- Similarity Function[2] = tensor([ 0.9776], device='cuda:0')
-- Similarity Function[3] = tensor([ 0.9707], device='cuda:0')
-- Similarity Function[4] = tensor([ 0.9797], device='cuda:0')
+- Similarity Function[0] = 0.9820
+- Similarity Function[1] = 0.9802
+- Similarity Function[2] = 0.9776
+- Similarity Function[3] = 0.9707
+- Similarity Function[4] = 0.9797
 
 RNN_seq2seq Controller <br>
-- Similarity Function[0] = tensor([-0.0936], device='cuda:0')
-- Similarity Function[1] = tensor([ 0.1777], device='cuda:0')
-- Similarity Function[2] = tensor([-0.1399], device='cuda:0')
-- Similarity Function[3] = tensor([ 0.1160], device='cuda:0')
-- Similarity Function[4] = tensor([ 0.4007], device='cuda:0')
+- Similarity Function[0] = -0.0668
+- Similarity Function[1] = 0.1031
+- Similarity Function[2] = 0.0675
+- Similarity Function[3] = 0.2369
+- Similarity Function[4] = 0.8313
