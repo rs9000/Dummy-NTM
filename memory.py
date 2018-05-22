@@ -24,7 +24,7 @@ class Memory(nn.Module):
 
     def _similarity(self, k, β, memory):
         # Similarità coseno
-        w = F.cosine_similarity(memory.cuda(), k, -1, 1e-16)
+        w = F.cosine_similarity(memory, k, -1, 1e-16)
         w = F.softmax(β * w, dim=-1)
         return w
 
@@ -35,9 +35,9 @@ class ReadHead(Memory):
         super(ReadHead, self).__init__(M, N)
 
         print("--- Initialize Memory: ReadHead")
-        self.fc_read1 = nn.Linear(controller_dim, self.N+1).cuda()
+        self.fc_read1 = nn.Linear(controller_dim, self.N+1)
         # TODO: move decode layer in NTM class
-        self.fc_decode = nn.Linear(self.N, function_vector_size*function_vector_size).cuda()
+        self.fc_decode = nn.Linear(self.N, function_vector_size*function_vector_size)
         self.reset_parameters()
 
     def reset_parameters(self):

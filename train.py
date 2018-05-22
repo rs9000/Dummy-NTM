@@ -29,6 +29,8 @@ def parse_arguments():
                         help='Dimensionality of functions to learn', metavar='')
     parser.add_argument('--n_functions', type=int, default=5,
                         help='Number of functions', metavar='')
+    parser.add_argument('--controller_type', type=str, default="feed",
+                        help='Type of controller: feedforward, rnn, rnn_seq2seq', metavar='')
     parser.add_argument('--controller_dim', type=int, default=256,
                         help='Dimensionality of the feature vector produced by the controller', metavar='')
     parser.add_argument('--max_program_length', type=int, default=5,
@@ -87,15 +89,6 @@ def colorize(value, vmin=None, vmax=None, cmap=None):
     return value
 
 
-# Horrible hard-coded function
-def getPrograms(model):
-    w = torch.tensor([[1, 0, 0, 0, 0], [0, 1, 0, 0, 0], [0, 0, 1, 0, 0], [0, 0, 0, 1, 0], [0, 0, 0, 0, 1]], dtype=torch.float)
-    x = torch.tensor([-0.1,-0.6,0.7,0.3,0.8,-0.45,0.11,0.6,-0.3,0.2], dtype=torch.float)
-    model(torch.unsqueeze(x.cuda(), 0), torch.unsqueeze(w,0))
-    _, _, _, programList = model.get_memory_info()
-    return programList
-
-
 if __name__ == "__main__":
 
     args = parse_arguments()
@@ -117,11 +110,12 @@ if __name__ == "__main__":
                 num_inputs=args.input_size,
                 num_outputs=args.output_size,
                 function_vector_size=args.function_size,
-                max_program_length=args.max_program_length,
+                n_functions=args.n_functions,
+                use_RnnController=args.controller_type,
                 controller_dim=args.controller_dim,
                 input_embedding=dataset.input_embedding,
                 output_embedding=dataset.output_embedding,
-                )
+                ).cuda()
 
     print(model)
 
@@ -136,7 +130,6 @@ if __name__ == "__main__":
 
     if args.loadmodel != '':
         model.load_state_dict(torch.load(args.loadmodel))
-        getPrograms(model)
 
     for e, (X, program, Y) in enumerate(dataloader):
         tmp = time()
