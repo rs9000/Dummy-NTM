@@ -10,7 +10,7 @@ from function_dataset import FunctionDataset
 import matplotlib
 import matplotlib.cm
 
-def clip_grads(net):
+def clip_grads(net, args):
     parameters = list(filter(lambda p: p.grad is not None, net.parameters()))
     for p in parameters:
         p.grad.data.clamp_(args.min_grad, args.max_grad)
@@ -29,7 +29,7 @@ def parse_arguments():
                         help='Dimensionality of functions to learn', metavar='')
     parser.add_argument('--n_functions', type=int, default=5,
                         help='Number of functions', metavar='')
-    parser.add_argument('--controller_type', type=str, default="feed",
+    parser.add_argument('--controller_type', type=str, default="feedforward",
                         help='Type of controller: feedforward, rnn, rnn_seq2seq', metavar='')
     parser.add_argument('--controller_dim', type=int, default=256,
                         help='Dimensionality of the feature vector produced by the controller', metavar='')
@@ -41,16 +41,18 @@ def parse_arguments():
                         help='Using curriculum in training', metavar='')
     parser.add_argument('--learning_rate', type=float, default=1e-4,
                         help='Optimizer learning rate', metavar='')
-    parser.add_argument('--min_grad', type=float, default=-10.,
+    parser.add_argument('--min_grad', type=float, default=-10,
                         help='Minimum value of gradient clipping', metavar='')
-    parser.add_argument('--max_grad', type=float, default=10.,
+    parser.add_argument('--max_grad', type=float, default=10,
                         help='Maximum value of gradient clipping', metavar='')
     parser.add_argument('--logdir', type=str, default='./logs2',
                         help='The directory where to store logs', metavar='')
     parser.add_argument('--loadmodel', type=str, default='',
                         help='The pre-trained model checkpoint', metavar='')
-    parser.add_argument('--savemodel', type=str, default='checkpoint.model',
+    parser.add_argument('--savemodel', type=str, default='checkpoint',
                         help='Name/Path of model checkpoint', metavar='')
+    parser.add_argument('--eval', type=bool, default=False,
+                        help='Evaluate primitive functions', metavar='')
 
     return parser.parse_args()
 
@@ -89,8 +91,27 @@ def colorize(value, vmin=None, vmax=None, cmap=None):
     return value
 
 
-if __name__ == "__main__":
+def eval(model, dataset, args):
+    sample, _, _ = dataset[2]
+    sample = torch.tensor(sample)
+    program = torch.zeros(1, args.n_functions, args.n_functions)
+    for i in range(args.n_functions):
+        program[0, i, i] = 1
+    model(sample.cuda(), program.cuda())
+    _, _, ntm_programs = model.get_memory_info()
+    gen_programs = dataset.program_list()
 
+    for i, ntm_program in enumerate(ntm_programs):
+        gen_program = gen_programs[i].view(1, args.function_size*args.function_size).cuda()
+        ntm_program = ntm_program.view(1, -1)
+        pdist = torch.nn.CosineSimilarity()
+        dist = pdist(gen_program, ntm_program)
+        print("Similarity Function[" + str(i) + "] = " + str(dist.data))
+
+    return
+
+
+def train():
     args = parse_arguments()
     writer = SummaryWriter()
     dataset = FunctionDataset(input_vector_size=args.input_size,
@@ -131,6 +152,10 @@ if __name__ == "__main__":
     if args.loadmodel != '':
         model.load_state_dict(torch.load(args.loadmodel))
 
+    if args.eval:
+        eval(model, dataset, args)
+        return
+
     for e, (X, program, Y) in enumerate(dataloader):
         tmp = time()
         optimizer.zero_grad()
@@ -143,7 +168,7 @@ if __name__ == "__main__":
 
         loss = criterion(y_pred, Y.cuda())
         loss.backward()
-        clip_grads(model)
+        clip_grads(model, args)
         optimizer.step()
         losses += [loss.item()]
 
@@ -175,4 +200,8 @@ if __name__ == "__main__":
                                             scale_each=True)
                     writer.add_image('True software ' + str(i), pic7, e)
 
-                torch.save(model.state_dict(), args.savemodel)
+                torch.save(model.state_dict(), args.savemodel + "_" + args.controller_type + ".model")
+
+
+if __name__ == "__main__":
+    train()
