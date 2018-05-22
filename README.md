@@ -11,6 +11,11 @@ usage: train.py [-args]
 ### Model:<br>
 <img src="pics/dntm.jpg" width="700">
 
+## Controller type
+--controller_type = [feedforward, rnn, rnn_seq2seq] <br><br>
+<img src="pics/controller_types.jpg" width="500">
+
+
 ## Learn functions task <br>
 - Input Vector Length: 10<br> 
 - Max Program length: 5<br> 
