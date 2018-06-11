@@ -2,7 +2,6 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
-torch.manual_seed(1)
 
 class Controller(nn.Module):
     def __init__(self, num_inputs, num_outputs):

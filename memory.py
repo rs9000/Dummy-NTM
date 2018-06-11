@@ -37,16 +37,12 @@ class ReadHead(Memory):
         print("--- Initialize Memory: ReadHead")
         self.fc_read1 = nn.Linear(controller_dim, self.N+1)
         # TODO: move decode layer in NTM class
-        self.fc_decode = nn.Linear(self.N, function_vector_size*function_vector_size)
         self.reset_parameters()
 
     def reset_parameters(self):
         # Initialize linear layers read1
         nn.init.normal_(self.fc_read1.weight, std=1)
         nn.init.normal_(self.fc_read1.bias, std=0.01)
-        # Initialize linear layers decoder
-        nn.init.normal_(self.fc_decode.weight, std=1)
-        nn.init.normal_(self.fc_decode.bias, std=0.01)
 
     def read(self, controller_out, memory):
         # Genera parametri
@@ -59,6 +55,4 @@ class ReadHead(Memory):
         self.rw_addressing.append(w)
         # Read
         read = torch.matmul(w, memory)
-        # Decode
-        read = F.tanh(self.fc_decode(read))
         return read, w

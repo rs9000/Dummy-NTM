@@ -23,8 +23,8 @@ class NTM(nn.Module):
         self.last_read = torch.zeros(1, self.N)
 
         self.function_vector_size = function_vector_size
-        self.input_embedding = torch.from_numpy(input_embedding).cuda()
-        self.output_embedding = torch.from_numpy(output_embedding).cuda()
+        self.input_embedding = input_embedding.cuda()
+        self.output_embedding = output_embedding.cuda()
 
         if self.use_RnnController == "rnn":
             self.controller = RNNController(n_functions, controller_dim)

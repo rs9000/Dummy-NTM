@@ -2,45 +2,10 @@ import numpy as np
 from torch.utils.data import Dataset
 from utils.generic import np_funct_categorical
 import torch
+import torch.nn.functional as F
 
-np.random.seed(30101990)
-
-
-def sigmoid(x):
-    """
-    Numpy sigmoid function.
-
-    Parameters
-    ----------
-    x: np.array()
-        the array to apply the sigmoid to.
-
-    Returns
-    -------
-    np.array()
-        the array sigmoid-activated.
-    """
-
-    return 1 / (1 + np.exp(-x))
-
-
-def softmax(x):
-    """
-    Numpy softmax function.
-
-    Parameters
-    ----------
-    x: np.array()
-        the array to apply the softmax to.
-
-    Returns
-    -------
-    np.array()
-        the array softmax-activated.
-    """
-    N = np.exp(x)
-    D = np.sum(N)
-    return N / D
+#np.random.seed(30101990)
+#torch.manual_seed(30101990)
 
 
 class FunctionDataset(Dataset):
@@ -92,14 +57,12 @@ class FunctionDataset(Dataset):
         self._cur_max_program_length = max_program_length if not use_curriculum else 1
 
         # random parameters
-        self._input_embedding = np.random.uniform(low=-1, high=1,
-                                                  size=(input_vector_size, function_vector_size)).astype('f')
+        self._input_embedding = torch.FloatTensor(input_vector_size, function_vector_size).uniform_(-1, 1)
 
-        self._functions = np.random.uniform(low=-1, high=1,
-                                            size=(n_functions, function_vector_size, function_vector_size)).astype('f')
+        self._functions = torch.FloatTensor(n_functions, function_vector_size, function_vector_size).uniform_(-1, 1)
 
-        self._output_embedding = np.random.uniform(low=-1, high=1,
-                                                   size=(function_vector_size, output_vector_size)).astype('f')
+        self._output_embedding = torch.FloatTensor(function_vector_size, output_vector_size).uniform_(-1, 1)
+
 
     def __len__(self):
         """
@@ -121,7 +84,7 @@ class FunctionDataset(Dataset):
         """
 
         # initialize input_vector
-        input_vec = np.random.uniform(low=-1, high=1, size=(1, self._input_vector_size)).astype('f')
+        input_vec = torch.FloatTensor(1, self._input_vector_size).uniform_(-1, 1)
 
         # sample a random number of functions
         program_length = np.random.randint(1, self._cur_max_program_length + 1)
@@ -129,10 +92,10 @@ class FunctionDataset(Dataset):
         sampled_functions = self._functions[sampled_functions_idx, :]
 
         # apply functions
-        h = np.dot(input_vec, self._input_embedding)  # input embedding
+        h = torch.mm(input_vec, self._input_embedding)  # input embedding
         for func in sampled_functions:
-            h = sigmoid(np.dot(h, func))
-        output_vec = np.dot(h, self._output_embedding)
+            h = F.sigmoid(torch.mm(h, func))
+        output_vec = torch.mm(h, self._output_embedding)
 
         # get one-hot representation of functions applied.
         one_hot_functions = np_funct_categorical(functions_idx=sampled_functions_idx, n_functions=self._n_functions)
@@ -169,4 +132,4 @@ class FunctionDataset(Dataset):
         return self._output_embedding
 
     def program_list(self):
-        return torch.from_numpy(self._functions)
+        return self._functions

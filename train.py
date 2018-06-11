@@ -21,15 +21,13 @@ def parse_arguments():
     parser.add_argument('--input_size', type=int, default=10, help='The length of input vector', metavar='')
     parser.add_argument('--output_size', type=int, default=10,
                         help='The The length of output vector', metavar='')
-    parser.add_argument('--memory_vector_size', type=int, default=100,
-                        help='Size of vectors stored in memory', metavar='')
     parser.add_argument('--memory_capacity', type=int, default=50,
                         help='Number of vectors stored in memory', metavar='')
     parser.add_argument('--function_size', type=int, default=9,
                         help='Dimensionality of functions to learn', metavar='')
     parser.add_argument('--n_functions', type=int, default=5,
                         help='Number of functions', metavar='')
-    parser.add_argument('--controller_type', type=str, default="feedforward",
+    parser.add_argument('--controller_type', type=str, default="feed",
                         help='Type of controller: feedforward, rnn, rnn_seq2seq', metavar='')
     parser.add_argument('--controller_dim', type=int, default=256,
                         help='Dimensionality of the feature vector produced by the controller', metavar='')
@@ -98,16 +96,21 @@ def eval(model, dataset, args):
     for i in range(args.n_functions):
         program[0, i, i] = 1
     model(sample.cuda(), program.cuda())
-    _, _, ntm_programs = model.get_memory_info()
+    memory, _, ntm_programs = model.get_memory_info()
     gen_programs = dataset.program_list()
 
-    for i, ntm_program in enumerate(ntm_programs):
-        gen_program = gen_programs[i].view(1, args.function_size*args.function_size).cuda()
-        ntm_program = ntm_program.view(1, -1)
-        pdist = torch.nn.CosineSimilarity()
-        dist = pdist(gen_program, ntm_program)
-        print("Similarity Function[" + str(i) + "] = " + str(dist.data))
+    test = np.zeros((50, 5))
+    for j, memory in enumerate(memory):
+         for i, gen_program in enumerate(gen_programs):
+                gen_program = gen_program.view(1, args.function_size*args.function_size).cuda()
+                memory = memory.view(1, -1)
+                pdist = torch.nn.CosineSimilarity()
+                dist = pdist(gen_program, memory)
+                test[j][i] = dist.data
+                #print(ntm_program)
+                #print("Sim [" + str(i) + "][" + str(j) + "] = " + str(dist.data))
 
+    print(test.round(2))
     return
 
 
@@ -124,10 +127,10 @@ def train():
                               train_transforms=None)
 
     dataloader = DataLoader(dataset, batch_size=1,
-                            shuffle=True, num_workers=4)
+                            shuffle=True, num_workers=1)
 
     model = NTM(M=args.memory_capacity,
-                N=args.memory_vector_size,
+                N=args.function_size*args.function_size,
                 num_inputs=args.input_size,
                 num_outputs=args.output_size,
                 function_vector_size=args.function_size,
@@ -177,7 +180,7 @@ def train():
             print("Loss: ", loss.item())
             writer.add_scalar('Mean loss', mean_loss, e)
             losses = []
-            if e % 5000 == 0:
+            if e % 200 == 0:
                 print(y_pred)
                 print(Y)
                 mem_pic, read_pic, ntm_programs = model.get_memory_info()
