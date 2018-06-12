@@ -1,4 +1,4 @@
-# Simple-DNTM
+# NoDecoder-DNTM
 Not a Neural turing machine
 
 ### How to use
