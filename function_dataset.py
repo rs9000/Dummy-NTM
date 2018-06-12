@@ -75,7 +75,7 @@ class FunctionDataset(Dataset):
         """
         return self._samples_per_epoch
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx, embedding=True):
         """
 
         Returns
@@ -95,10 +95,15 @@ class FunctionDataset(Dataset):
         h = torch.mm(input_vec, self._input_embedding)  # input embedding
         for func in sampled_functions:
             h = F.sigmoid(torch.mm(h, func))
-        output_vec = torch.mm(h, self._output_embedding)
+
+        if not embedding:
+            output_vec = h
+        else:
+            output_vec = torch.mm(h, self._output_embedding)
 
         # get one-hot representation of functions applied.
         one_hot_functions = np_funct_categorical(functions_idx=sampled_functions_idx, n_functions=self._n_functions)
+        one_hot_functions = torch.from_numpy(one_hot_functions)
 
         # check if I need to update cur_max_program_length
         if self._use_curriculum and idx % 10000 == 0:
@@ -133,3 +138,47 @@ class FunctionDataset(Dataset):
 
     def program_list(self):
         return self._functions
+
+    def entropy(self, n_samples, n_bins, embedding):
+        hist = []
+        hist_norm = []
+        entropy = []
+
+        # Check vector_output size with and without embedding
+        if embedding:
+            vect_size = self._output_vector_size
+        else:
+            vect_size = self._function_vector_size
+
+        # Collect samples
+        samples = torch.zeros(n_samples, vect_size)
+        for i in range(n_samples):
+            _, _, out = self.__getitem__(1, embedding)
+            samples[i] = torch.squeeze(out)
+
+        #Reshape
+        samples = samples.view(vect_size, n_samples)
+
+        #Compute (n = vector_length) histograms
+        for i in range(vect_size):
+            hist.append(torch.histc(samples[i], n_bins))
+            t_norm = torch.zeros(n_bins)
+            #Probability of each item in bins
+            for j in range(n_bins):
+                p = hist[i][j]/torch.sum(hist[i])
+                t_norm[j] = p
+            hist_norm.append(t_norm)
+
+        #Compute entropy
+        for i in range(vect_size):
+            entropy_sum = torch.zeros(n_bins)
+            for j in range(n_bins):
+                entropy_sum[j] = hist_norm[i][j] * torch.log10(hist_norm[i][j])
+            entropy.append(-torch.sum(entropy_sum))
+
+        return np.mean(entropy)
+
+
+
+
+
