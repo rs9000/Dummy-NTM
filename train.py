@@ -2,10 +2,8 @@ import torch
 import numpy as np
 import argparse
 from ntm import NTM
-from time import time
 from tensorboardX import SummaryWriter
 import torchvision.utils as vutils
-from torch.utils.data import DataLoader
 from function_dataset import FunctionDataset
 import matplotlib
 import matplotlib.cm
@@ -126,9 +124,6 @@ def train():
                               use_curriculum=args.use_curriculum,
                               train_transforms=None)
 
-    dataloader = DataLoader(dataset, batch_size=1,
-                            shuffle=True, num_workers=1)
-
     model = NTM(M=args.memory_capacity,
                 N=args.function_size*args.function_size,
                 num_inputs=args.input_size,
@@ -142,6 +137,8 @@ def train():
                 ).cuda()
 
     print(model)
+    entropy = dataset.entropy(10000, 10, False)
+    print("Entropy of ground truth vectors: " + str(entropy))
 
     criterion = torch.nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
@@ -159,12 +156,11 @@ def train():
         eval(model, dataset, args)
         return
 
-    for e, (X, program, Y) in enumerate(dataloader):
-        tmp = time()
+    for e in range(len(dataset)):
+        X, program, Y = dataset[e]
         optimizer.zero_grad()
 
-        X = X.view(1, -1)
-        Y = Y.view(1, -1)
+        program = torch.unsqueeze(program,0)
         program.requires_grad = True
 
         y_pred = model(X.cuda(), program.cuda())
