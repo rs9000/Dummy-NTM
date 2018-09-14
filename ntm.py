@@ -40,8 +40,9 @@ class NTM(nn.Module):
         self.programList = []
         self.initalize_state()
 
-    def forward(self, X, program):
+    def forward(self, x):
 
+        X, program = x
         self.programList = []
         self.read_head.reset_memory()
         self.rnn_hidden = None
@@ -77,6 +78,7 @@ class NTM(nn.Module):
             # STEP 3 Read head
             self._read_write(out.view(1, -1))
             reshap = self.function_vector_size
+
             # STEP 4 Execute functions
             X = self.executioner(X, self.last_read.view(reshap, reshap))
 
@@ -85,10 +87,9 @@ class NTM(nn.Module):
         return out
 
     def _read_write(self, controller_out):
-        # READ
-        read, w = self.read_head.read(controller_out, self.memory)
-        self.last_read = read
-        self.programList.append(read)
+        # READ from memory
+        self.last_read, w = self.read_head.read(controller_out, self.memory)
+        self.programList.append(self.last_read)
 
     def initalize_state(self):
         # Initialize stuff

@@ -4,8 +4,8 @@ from utils.generic import np_funct_categorical
 import torch
 import torch.nn.functional as F
 
-#np.random.seed(30101990)
-#torch.manual_seed(30101990)
+np.random.seed(30101990)
+torch.manual_seed(30101990)
 
 
 class FunctionDataset(Dataset):
@@ -77,10 +77,6 @@ class FunctionDataset(Dataset):
 
     def __getitem__(self, idx, embedding=True):
         """
-
-        Returns
-        -------
-
         """
 
         # initialize input_vector
@@ -140,6 +136,15 @@ class FunctionDataset(Dataset):
         return self._functions
 
     def entropy(self, n_samples, n_bins, embedding):
+        """
+         Calcola entropia del dataset di Ground Truth.
+         Arguments:
+             -N di samples
+             -N di bins
+             - Variabile booleana che specifica se applicare o meno il layaer di embedding
+
+        Ritorna valore scalare che indica l'entropia media dei bins
+        """
         hist = []
         hist_norm = []
         entropy = []
@@ -161,7 +166,7 @@ class FunctionDataset(Dataset):
 
         #Compute (n = vector_length) histograms
         for i in range(vect_size):
-            hist.append(torch.histc(samples[i], n_bins))
+            hist.append(torch.histc(samples[i], bins=n_bins))
             t_norm = torch.zeros(n_bins)
             #Probability of each item in bins
             for j in range(n_bins):
@@ -177,8 +182,3 @@ class FunctionDataset(Dataset):
             entropy.append(-torch.sum(entropy_sum))
 
         return np.mean(entropy)
-
-
-
-
-

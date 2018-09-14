@@ -8,6 +8,7 @@ from function_dataset import FunctionDataset
 import matplotlib
 import matplotlib.cm
 
+
 def clip_grads(net, args):
     parameters = list(filter(lambda p: p.grad is not None, net.parameters()))
     for p in parameters:
@@ -25,7 +26,7 @@ def parse_arguments():
                         help='Dimensionality of functions to learn', metavar='')
     parser.add_argument('--n_functions', type=int, default=5,
                         help='Number of functions', metavar='')
-    parser.add_argument('--controller_type', type=str, default="feed",
+    parser.add_argument('--controller_type', type=str, default="rnn_seq2seq",
                         help='Type of controller: feedforward, rnn, rnn_seq2seq', metavar='')
     parser.add_argument('--controller_dim', type=int, default=256,
                         help='Dimensionality of the feature vector produced by the controller', metavar='')
@@ -43,11 +44,11 @@ def parse_arguments():
                         help='Maximum value of gradient clipping', metavar='')
     parser.add_argument('--logdir', type=str, default='./logs2',
                         help='The directory where to store logs', metavar='')
-    parser.add_argument('--loadmodel', type=str, default='',
+    parser.add_argument('--loadmodel', type=str, default='checkpoint/checkpoint_rnn_seq2seq.model',
                         help='The pre-trained model checkpoint', metavar='')
     parser.add_argument('--savemodel', type=str, default='checkpoint',
                         help='Name/Path of model checkpoint', metavar='')
-    parser.add_argument('--eval', type=bool, default=False,
+    parser.add_argument('--eval', type=bool, default=True,
                         help='Evaluate primitive functions', metavar='')
 
     return parser.parse_args()
@@ -88,28 +89,49 @@ def colorize(value, vmin=None, vmax=None, cmap=None):
 
 
 def eval(model, dataset, args):
+    """
+    Funzione che crea la matrice di similarita' tra le funzioni apprese
+    e quelle di Ground Truth.
+    Arguments:
+      - Modello rete
+      - Dataset
+      - Argomenti
+
+    Ritorna una matrice di similarita' di dimensioni [ Righe_memoria X N_funzioni ]
+    """
+
+    #Prevelo un sample dal dataset
     sample, _, _ = dataset[2]
     sample = torch.tensor(sample)
+
+    #Genero un progr che contiene tutte le funzioni
     program = torch.zeros(1, args.n_functions, args.n_functions)
     for i in range(args.n_functions):
         program[0, i, i] = 1
-    model(sample.cuda(), program.cuda())
+
+    # Lo do' in input alla rete
+    pack = sample.cuda(), program.cuda()
+    model(pack)
+
+    #Salvo le funzioni generate dal modello e quelle di Ground Truth
     memory, _, ntm_programs = model.get_memory_info()
     gen_programs = dataset.program_list()
 
+    # Creo matrice delle dim Memoria X n_funzioni
     test = np.zeros((50, 5))
+
     for j, memory in enumerate(memory):
          for i, gen_program in enumerate(gen_programs):
                 gen_program = gen_program.view(1, args.function_size*args.function_size).cuda()
                 memory = memory.view(1, -1)
+                #Calcola la similarita' coseno tra le funzioni
                 pdist = torch.nn.CosineSimilarity()
                 dist = pdist(gen_program, memory)
                 test[j][i] = dist.data
                 #print(ntm_program)
-                #print("Sim [" + str(i) + "][" + str(j) + "] = " + str(dist.data))
+                #print("Sim [" + str(i) + "][" + str(j) + "] = " + str(dist.data.cpu().numpy().round(2)))
 
-    print(test.round(2))
-    return
+    return test.round(2)
 
 
 def train():
@@ -137,6 +159,8 @@ def train():
                 ).cuda()
 
     print(model)
+
+    #Valuta entropia del dataset su 10000 samples e 10 bins
     entropy = dataset.entropy(10000, 10, False)
     print("Entropy of ground truth vectors: " + str(entropy))
 
@@ -149,13 +173,17 @@ def train():
 
     losses = []
 
+    #Carica checkpoint
     if args.loadmodel != '':
         model.load_state_dict(torch.load(args.loadmodel))
 
+    # Valuta modello
     if args.eval:
-        eval(model, dataset, args)
+        sim_matrix = eval(model, dataset, args)
+        print(sim_matrix)
         return
 
+    # Train
     for e in range(len(dataset)):
         X, program, Y = dataset[e]
         optimizer.zero_grad()
@@ -163,7 +191,8 @@ def train():
         program = torch.unsqueeze(program,0)
         program.requires_grad = True
 
-        y_pred = model(X.cuda(), program.cuda())
+        input_packed = X.cuda(), program.cuda()
+        y_pred = model(input_packed)
 
         loss = criterion(y_pred, Y.cuda())
         loss.backward()

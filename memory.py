@@ -36,7 +36,6 @@ class ReadHead(Memory):
 
         print("--- Initialize Memory: ReadHead")
         self.fc_read1 = nn.Linear(controller_dim, self.N+1)
-        # TODO: move decode layer in NTM class
         self.reset_parameters()
 
     def reset_parameters(self):
